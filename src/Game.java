@@ -7,7 +7,7 @@ public class Game extends Board {
     public Game(Board board, Player player) {
         this.board = board;
         this.player = player;
-        //this.cpu = cpu;
+        this.cpu = cpu;
     }
 
     public void playerMove(char position) {
@@ -15,12 +15,14 @@ public class Game extends Board {
             for (int j = 0; j < 3; j++) {
                 if (position == board.getSymbolInPosition(i, j)) {
                     board.setSymbolInPosition(i, j, player.playerSymbol());
-                    board.printBoard();
-                    System.out.println(checkWin());
                     return;
                 }
             }
         }
+    }
+
+    public void cpuMove() {
+
     }
 
     public boolean checkWin() {
@@ -33,5 +35,14 @@ public class Game extends Board {
         //diagonals
         if (board.isVisited(0, 0) && board.isVisited(1, 1) && board.isVisited(2, 2)) return true;
         return board.isVisited(0, 2) && board.isVisited(1, 1) && board.isVisited(2, 0);
+    }
+
+    public boolean isBoardFull() {
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (board.getSymbolInPosition(i, j) != player.playerSymbol()) return false;
+            }
+        }
+        return true;
     }
 }
