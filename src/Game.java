@@ -2,9 +2,9 @@ public class Game extends Board {
 
     private final Board board;
     private final Player player;
-    private CPU cpu;
+    private final CPU cpu;
 
-    public Game(Board board, Player player) {
+    public Game(Board board, Player player, CPU cpu) {
         this.board = board;
         this.player = player;
         this.cpu = cpu;
@@ -13,8 +13,8 @@ public class Game extends Board {
     public void playerMove(char position) {
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                if (position == board.getSymbolInPosition(i, j)) {
-                    board.setSymbolInPosition(i, j, player.playerSymbol());
+                if (position == board.getPosition(i, j)) {
+                    board.setPosition(i, j, player.playerSymbol());
                     return;
                 }
             }
@@ -22,25 +22,82 @@ public class Game extends Board {
     }
 
     public void cpuMove() {
+        int bestScore = Integer.MIN_VALUE;
+        int bestRow = -1, bestCol = -1;
+        int numbers = 0;
 
-    }
-
-    public boolean checkWin() {
-        for (int i = 0; i < 3; i++) {
-            //same line, row
-            if (board.isVisited(i, 0) && board.isVisited(i, 1) && board.isVisited(i, 2)) return true;
-            //same column
-            if (board.isVisited(0, i) && board.isVisited(1, i) && board.isVisited(2, i)) return true;
-        }
-        //diagonals
-        if (board.isVisited(0, 0) && board.isVisited(1, 1) && board.isVisited(2, 2)) return true;
-        return board.isVisited(0, 2) && board.isVisited(1, 1) && board.isVisited(2, 0);
-    }
-
-    public boolean isBoardFull() {
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                if (board.getSymbolInPosition(i, j) != player.playerSymbol()) return false;
+                if (board.getPosition(i, j) != player.playerSymbol() && board.getPosition(i, j) != cpu.CPUSymbol()) {//if position is null ' '
+
+                    board.setPosition(i, j, cpu.CPUSymbol());
+                    int score = dfsSearch(board.getBoard(), false);
+                    board.setPosition(i, j,  (char)('a' + numbers++));
+
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestRow = i;
+                        bestCol = j;
+                    }
+                }
+            }
+        }
+        if (bestRow != -1 && bestCol != -1) {
+            board.setPosition(bestRow, bestCol, cpu.CPUSymbol());
+            System.out.println("CPU played at [" + bestRow + "][" + bestCol + "]");
+        }
+    }
+
+    //depth-first search
+    private int dfsSearch(char[][] state, boolean cpuTurn) {
+        if (checkWin(state, cpu.CPUSymbol())) return 1;
+        if (checkWin(state, player.playerSymbol())) return -1;
+        if (isBoardFull(state)) return 0;
+
+        int bestScore = cpuTurn ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+        int numbers = 0;
+
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (state[i][j] != player.playerSymbol() && state[i][j] != cpu.CPUSymbol()) { //if position is null ' '
+
+                    state[i][j] = cpuTurn ? cpu.CPUSymbol() : player.playerSymbol();
+                    int score = dfsSearch(state, !cpuTurn);
+                    state[i][j] = (char)('a' + numbers++);
+
+                    bestScore = cpuTurn ? Math.max(bestScore, score) : Math.min(bestScore, score);
+                }
+            }
+        }
+        return bestScore;
+    }
+
+
+    public boolean checkWin(char[][] state, char player) {
+        for (int i = 0; i < 3; i++) {
+            //same line, row
+            if (state[i][0] == player
+                    && state[i][1] == player
+                    && state[i][2] == player) return true;
+            //same column
+            if (state[0][i] == player
+                    && state[1][i] == player
+                    && state[2][i] == player) return true;
+        }
+        //diagonals
+        if (state[0][0] == player
+                && state[1][1] == player
+                && state[2][2] == player) return true;
+
+        return state[0][2] == player
+                && state[1][1] == player
+                && state[2][0] == player;
+    }
+
+    public boolean isBoardFull(char[][] state) {
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (state[i][j] != player.playerSymbol() && state[i][j] != cpu.CPUSymbol()) return false;
             }
         }
         return true;

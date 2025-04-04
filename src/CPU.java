@@ -1,2 +1,1 @@
-public class CPU {
-}
+public record CPU (char CPUSymbol) {}
